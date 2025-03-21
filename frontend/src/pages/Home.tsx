@@ -1,12 +1,16 @@
+import { useNavigate } from "react-router-dom";
 import Call from "../assets/Call";
 import Join from "../assets/Join";
 import { usePeer } from "../context/PeerContext";
 import { useSocket } from "../context/SocketContext";
+import { IRequest } from "../types/request";
 
 const Home = () => {
 
     const { setStream, peer } = usePeer();
     const { ws } = useSocket();
+
+    const navigate = useNavigate();
 
     const handleCreateCall = () => {
         // Access the media device, camera and microphone 
@@ -36,21 +40,26 @@ const Home = () => {
         .then(() => {
             peer?.createOffer()
             .then((offer) => {
-                peer?.setLocalDescription(offer);
-            })
-            .then(() => {
-                // send the offer to the server
-                ws?.send(JSON.stringify({
-                    type: "offer",
-                    payload: {
-                        offer: peer?.localDescription
+                peer?.setLocalDescription(offer)
+                .then(() => {
+    
+                    const request: IRequest = {
+                        type: "create",
+                        payload: {
+                            offer: peer?.localDescription
+                        }
                     }
-                }))
+                    // send the offer to the server
+                    ws?.send(JSON.stringify(request));
+                })
             })
         })
     };
 
-    const handleJoinCall = () => {};
+    const handleJoinCall = () => {
+        // navigate to the join page
+        navigate("/join");
+    };
 
     return (
         <div className="min-h-screen flex justify-center items-center">

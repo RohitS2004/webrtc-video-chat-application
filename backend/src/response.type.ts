@@ -4,7 +4,7 @@ export interface ResponsePayload {
     answer?: RTCSessionDescription,
     offer?: RTCSessionDescription,
     iceCandidate?: RTCIceCandidate,
-    error?: string,
+    message?: string,
 }
 
 export interface IResponse {
