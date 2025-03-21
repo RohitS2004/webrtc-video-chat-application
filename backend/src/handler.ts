@@ -83,7 +83,7 @@ export const handleAnswer = (socket: WebSocket, payload: RequestPayload) => {
     // set that answer to the room's remote answer 
     // send this answer to the other user in the room
     
-    const answer = payload.answer;
+    const answer = payload.answer;    
     const roomId = payload.roomId;
 
     const room = manager.getRoom(roomId!);
@@ -104,6 +104,24 @@ export const handleAnswer = (socket: WebSocket, payload: RequestPayload) => {
 
 export const handleIceCandidate = (socket: WebSocket, payload: RequestPayload) => {
     // we will recieve a single ice candidate 
+    // we will also receive a room id
     // get the room from the room id
     // send this ice candidate to the other user in the room
+
+    const roomId = payload.roomId;
+    const room = manager.getRoom(roomId!);
+    const iceCandidate = payload.iceCandidate;
+
+    const users = room?.getUsers();
+    const otherUser = users?.find(u => u.getSocket() !== socket);
+
+    // send the ice candidate 
+    const response: IResponse = {
+        type: "ice-candidate",
+        payload: {
+            iceCandidate: iceCandidate!,
+        }
+    }
+
+    otherUser?.getSocket().send(JSON.stringify(response));
 }

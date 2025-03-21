@@ -9,7 +9,8 @@ import { IRequest } from "./types/request";
 
 const App = () => {
     const [str, setStr] = useState<MediaStream | null>(null);
-    const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
+    const [peerConnection, setPeerConnection] =
+        useState<RTCPeerConnection | null>(null);
     const [socket, setSocket] = useState<WebSocket | null>(null);
 
     const dispatch = useDispatch();
@@ -42,17 +43,18 @@ const App = () => {
                 case "room-id": {
                     dispatch(setRoomId(data.payload.roomId));
                     dispatch(setUserCount(1));
-                    
+
                     navigate(`/room/${data.payload.roomId}`);
                     break;
                 }
 
-                
                 case "answer": {
                     // we will receive the remote answer
                     // set the answer to the remote description
 
                     const remoteAnswer = data.payload.answer;
+                    // console.log(remoteAnswer);
+
                     if (!pc.remoteDescription) {
                         pc.setRemoteDescription(remoteAnswer!);
                     }
@@ -60,37 +62,42 @@ const App = () => {
                 }
 
                 case "offer": {
-                    // console.log(data);
-
                     const remoteOffer = data.payload.offer;
 
-                    // console.log(remoteOffer);
-                    pc.setRemoteDescription(remoteOffer!);
+                    pc.setRemoteDescription(remoteOffer!).then(() => {
+                        pc.createAnswer().then((answer) => {
+                            pc.setLocalDescription(answer).then(() => {                                
+                                const request: IRequest = {
+                                    type: "answer",
+                                    payload: {
+                                        answer: pc.localDescription,
+                                        roomId: data.payload.roomId,
+                                    },
+                                };
 
-                    pc.createAnswer()
-                    .then((answer) => {
-                        pc.setLocalDescription(answer);
-                    })
-                    .then(() => {
-                        const request: IRequest = {
-                            type: "answer",
-                            payload: {
-                                answer: pc.localDescription,
-                                roomId: data.payload.roomId
-                            }
-                        }
+                                ws.send(JSON.stringify(request));
 
-                        ws.send(JSON.stringify(request));
+                                dispatch(setUserCount(2));
 
-                        dispatch(setUserCount(2));
-
-                        navigate(`/room/${data.payload.roomId}`);
-                    })
+                                navigate(`/room/${data.payload.roomId}`);
+                            });
+                        });
+                    });
 
                     break;
                 }
+
+                case "ice-candidate": {
+                    // console.log(data.payload.iceCandidate);
+
+                    const candidate = new RTCIceCandidate(
+                        data.payload.iceCandidate
+                    );
+                    pc.addIceCandidate(candidate);
+                    break;
+                }
             }
-        }
+        };
 
         setPeer(pc);
     }, []);

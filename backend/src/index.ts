@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { IRequest } from "./request.type";
-import { handleAnswer, handleCreateRoom, handleJoinRoom } from "./handler";
+import { handleAnswer, handleCreateRoom, handleIceCandidate, handleJoinRoom } from "./handler";
 import { Manager } from "./manager";
 
 const wss = new WebSocketServer({
@@ -32,7 +32,8 @@ wss.on("connection", (ws: WebSocket) => {
             }
 
             case "ice-candidate": {
-                
+                handleIceCandidate(ws, data.payload);
+                break;
             }
         }
     });

@@ -4,9 +4,13 @@ import { usePeer } from "../context/PeerContext";
 import { IRequest } from "../types/request";
 import { useSocket } from "../context/SocketContext";
 import Back from "../assets/Back";
+import { useDispatch } from "react-redux";
+import { setUserType } from "../features/RoomSlice";
 
 const Join = () => {
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const dispatch = useDispatch();
 
     const { setStream, peer } = usePeer();
     const { ws } = useSocket();
@@ -23,6 +27,7 @@ const Join = () => {
         // send that answer to the server
         // server will send the answer to the other peer
         // the other peer will set that as the remote description
+        dispatch(setUserType("guest"));
 
         navigator.mediaDevices
             .getUserMedia({
@@ -57,13 +62,13 @@ const Join = () => {
     const handleBack = () => {
         window.history.back();
         // navigates the browser back to the previous page in the session history
-    }
+    };
 
     return (
         <div className="min-h-screen flex justify-center items-center relative">
             <div
-            className="absolute top-4 left-4 p-2 bg-slate-900 rounded-full hover:bg-slate-600 active:scale-95 transition-all duration-200"
-            onClick={handleBack}
+                className="absolute top-4 left-4 p-2 bg-slate-900 rounded-full hover:bg-slate-600 active:scale-95 transition-all duration-200"
+                onClick={handleBack}
             >
                 <Back
                     width={26}

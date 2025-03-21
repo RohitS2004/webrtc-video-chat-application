@@ -4,56 +4,58 @@ import Join from "../assets/Join";
 import { usePeer } from "../context/PeerContext";
 import { useSocket } from "../context/SocketContext";
 import { IRequest } from "../types/request";
+import { useDispatch } from "react-redux";
+import { setUserType } from "../features/RoomSlice";
 
 const Home = () => {
-
     const { setStream, peer } = usePeer();
     const { ws } = useSocket();
+
+    const dispatch = useDispatch();
 
     const navigate = useNavigate();
 
     const handleCreateCall = () => {
-        // Access the media device, camera and microphone 
+        // Access the media device, camera and microphone
         // Get the local media stream
         // Add the tracks to the peer connection
-        // create an offer 
+        // create an offer
         // set the local description
         // send the offer to the server
-        navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: {
-                frameRate: {
-                    ideal: 60,
-                    max: 120
-                },
-                facingMode: "user"
-            }
-        })
-        .then((stream: MediaStream) => {
-            setStream(stream);
+        dispatch(setUserType("host"));
 
-            stream.getTracks()
-            .forEach((track) => {
-                peer?.addTrack(track, stream);
+        navigator.mediaDevices
+            .getUserMedia({
+                audio: true,
+                video: {
+                    frameRate: {
+                        ideal: 60,
+                        max: 120,
+                    },
+                    facingMode: "user",
+                },
             })
-        })
-        .then(() => {
-            peer?.createOffer()
-            .then((offer) => {
-                peer?.setLocalDescription(offer)
-                .then(() => {
-    
-                    const request: IRequest = {
-                        type: "create",
-                        payload: {
-                            offer: peer?.localDescription
-                        }
-                    }
-                    // send the offer to the server
-                    ws?.send(JSON.stringify(request));
-                })
+            .then((stream: MediaStream) => {
+                setStream(stream);
+
+                stream.getTracks().forEach((track) => {                    
+                    peer?.addTrack(track, stream);
+                });
             })
-        })
+            .then(() => {
+                peer?.createOffer().then((offer) => {
+                    peer?.setLocalDescription(offer).then(() => {
+                        const request: IRequest = {
+                            type: "create",
+                            payload: {
+                                offer: peer?.localDescription,
+                            },
+                        };
+                        // send the offer to the server
+                        ws?.send(JSON.stringify(request));
+                    });
+                });
+            });
     };
 
     const handleJoinCall = () => {
